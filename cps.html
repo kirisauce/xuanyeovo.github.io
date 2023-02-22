@@ -120,6 +120,12 @@ div.overlay {
                   type='checkbox'
                   :disabled='!(event_type == "mouse" || event_type == "click")'
                 /><a>捕获右键<br/></a>
+                <input
+                  type='number'
+                  placeholder='在这里输入时间(默认10秒)'
+                  maxlength='2'
+                  v-model='time_raw'
+                /><a><br/></a>
                 <form>
                     <input
                       v-model='event_type'
@@ -182,7 +188,7 @@ const root = {
     data() {
         return {
             score: 0,
-            time: 10000,
+            time: 0,
             running: false,
 
             use_global_capture: get_value('use_global_capture', true),
@@ -215,6 +221,9 @@ const root = {
             for( let i = 0; i < opts.length; i++ ) {
                 localStorage.setItem(opts[i], this[opts[i]]);
             }
+        },
+
+        update_time(e) {
         },
 
         pe(e) {
@@ -263,17 +272,17 @@ const root = {
             if (this.rest_time <= 0 || !this.running) {
                 this.end();
             } else {
-                this.update_text(this.rest_time);
+                this.update_text();
                 this.rest_time -= 100;
             }
         },
 
-        update_text(rest_time) {
-            let cps = this.score / (this.time - rest_time) * 1000;
+        update_text() {
+            let cps = this.score / ((this.time - this.rest_time) / 1000);
             if( isNaN(cps) ) {
                 cps = 0.0;
             }
-            this.time_text = fmt_nbr((rest_time / 1000).toString(), 1);
+            this.time_text = fmt_nbr((this.rest_time / 1000).toString(), 1);
             this.cps_text = fmt_nbr(cps.toString(), 3);
         },
 
@@ -281,9 +290,13 @@ const root = {
             this.score = 0;
             this.first_click = true;
             this.running = true;
-            this.rest_time = this.time;
             this.clicker_text = '点一下就开始';
             this.cps_text = '还没开始呢...';
+            this.time = this.time_raw * 1000;
+            if( !(1000 <= this.time && this.time <= 99000) ) {
+                this.time = 10000;
+            }
+            this.rest_time = this.time;
         },
 
         end() {
