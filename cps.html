@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CPS Test | xuanyeovo's site</title>
+        <meta charset='utf-8' />
+        <meta name='viewport' content='initial-scale=1.0,maximum-scale=3.0,minimum-scale=1.0' />
+        <script src='vue.global.min.js'></script>
+        <!--script src='https://cdn.bootcdn.net/ajax/libs/vConsole/3.15.0/vconsole.min.js'></script>
+        <script>
+var vConsole = new VConsole();
+        </script-->
+        <style>
+#app {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: #ffffff;
+    display: block;
+    position: fixed;
+}
+div.info {
+    display: flex;
+
+    aspect-ratio: 1.33;
+    width: 280px;
+
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    border-width: 2px;
+    border-color: #99999999;
+    border-style: solid;
+    border-radius: 5px;
+}
+div.info > * {
+    margin: 0 0 5px 5px;
+}
+
+input.begin {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 280px;
+    aspect-ratio: 5;
+
+    border-radius: 5px;
+    border-color: #cccccc;
+    border-style: solid;
+    border-width: 2px;
+}
+
+input.begin:focus {
+    outline: none;
+    resize: none;
+}
+
+input.begin:active {
+    border-color: #a073df;
+    border-style: solid;
+    border-width: 2px;
+}
+
+input.clicker {
+    transform: translate(-50%, 200%);
+    width: 280px;
+    aspect-ratio: 1.2;
+}
+
+div.overlay {
+    z-index: 6;
+    background: transparent;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
+        </style>
+    </head>
+    <body>
+        <div id='app'>
+            <div class='info'>
+                <div class='score_display'>Score: {{score}}</div>
+                <div class='cps_display'>CPS: {{cps_text}}</div>
+                <div class='time_display' v-show='running'>Rest time: {{time_text}}</div>
+            </div>
+            <input
+              @click='pe'
+              @contextmenu='pe'
+              @mousedown='pe'
+              @touchstart='pe'
+              type='button'
+              :value='clicker_text'
+              class='begin clicker'
+              v-show='running && !use_global_capture'
+            />
+            <input
+              @click='begin()'
+              type='button'
+              value='begin'
+              class='begin'
+              v-show='!running'
+            />
+            <div class='options' v-if='!running'>
+                <input
+                  v-model='use_global_capture'
+                  type='checkbox'
+                /><a>使用全局捕获<br/></a>
+                <input
+                  v-model='capture_right_click'
+                  type='checkbox'
+                  :disabled='!(event_type == "mouse" || event_type == "click")'
+                /><a>捕获右键<br/></a>
+                <form>
+                    <input
+                      v-model='event_type'
+                      type='radio'
+                      value='click'
+                    /><a>ClickEvent<br/></a>
+                    <input
+                      v-model='event_type'
+                      type='radio'
+                      value='mouse'
+                    /><a>MouseEvent<br/></a>
+                    <input
+                      v-model='event_type'
+                      type='radio'
+                      value='touch'
+                    /><a>TouchEvent<br/></a>
+                </form>
+            </div>
+            <div
+              @click='pe'
+              @contextmenu='pe'
+              @mousedown='pe'
+              @touchstart='pe'
+              class='overlay'
+              v-show='running && use_global_capture'
+            ></div>
+        </div>
+
+        <script>
+
+"use strict";
+
+function get_value(name, default_value) {
+    let existing = localStorage.getItem(name);
+    if( existing == null ) {
+        localStorage.setItem(name, default_value);
+        return default_value;
+    } else {
+        return existing;
+    }
+}
+
+function fmt_nbr(s, n) {
+    let splited = s.split('.', 2);
+    if( splited.length < 2 ) {
+        splited.push("0");
+    }
+    if( splited[1].length > n ) {
+        splited[1] = splited[1].substring(0, n);
+    } else if( splited[1].length < n ) {
+        let chars_c = n - splited[1].length;
+        for( let i = 0; i < chars_c; i++ ) {
+            splited[1] += '0';
+        }
+    }
+    return splited.join('.');
+}
+
+const root = {
+    data() {
+        return {
+            score: 0,
+            time: 10000,
+            running: false,
+
+            use_global_capture: get_value('use_global_capture', true),
+            capture_right_click: get_value('capture_right_click', false),
+
+            event_type: get_value('event_type', 'click'),
+
+            first_click: true,
+
+            update_iv: null,
+            rest_time: 0,
+
+            cps_text: '还没开始呢...',
+            time_text: '',
+            clicker_text: '',
+        };
+    },
+
+    mounted() {
+        setInterval(this.store_options, 1000);
+    },
+
+    methods: {
+        store_options() {
+            let opts = [
+                'use_global_capture',
+                'event_type',
+                'capture_right_click'
+            ];
+            for( let i = 0; i < opts.length; i++ ) {
+                localStorage.setItem(opts[i], this[opts[i]]);
+            }
+        },
+
+        pe(e) {
+            let i = ()=> {
+                this.check_first_click();
+                //this.score_increase();
+                this.score++;
+                e.stopPropagation();
+                e.preventDefault();
+            };
+            switch(e.type) {
+                case 'click':
+                    if( this.event_type == 'click' ) {
+                        i();
+                    }
+                    break;
+                case 'contextmenu':
+                    if( this.event_type == 'click' && this.capture_right_click ) {
+                        i();
+                    }
+                    break;
+                case 'mousedown':
+                    if( this.event_type == 'mouse' ) {
+                        if( e.button == 0 || ( e.button == 2 && this.capture_right_click ) ) {
+                            i();
+                        }
+                    }
+                    break;
+                case 'touchstart':
+                    if( this.event_type == 'touch' ) {
+                        i();
+                    }
+                    break;
+            }
+        },
+
+        check_first_click() {
+            if( this.first_click ) {
+                this.update_iv = setInterval(this.update, 100);
+                this.first_click = false;
+                this.clicker_text = '点我';
+            }
+        },
+
+        update() {
+            if (this.rest_time <= 0 || !this.running) {
+                this.end();
+            } else {
+                this.update_text(this.rest_time);
+                this.rest_time -= 100;
+            }
+        },
+
+        update_text(rest_time) {
+            let cps = this.score / (this.time - rest_time) * 1000;
+            if( isNaN(cps) ) {
+                cps = 0.0;
+            }
+            this.time_text = fmt_nbr((rest_time / 1000).toString(), 1);
+            this.cps_text = fmt_nbr(cps.toString(), 3);
+        },
+
+        begin() {
+            this.score = 0;
+            this.first_click = true;
+            this.running = true;
+            this.rest_time = this.time;
+            this.clicker_text = '点一下就开始';
+            this.cps_text = '还没开始呢...';
+        },
+
+        end() {
+            clearInterval(this.update_iv);
+            this.running = false;
+        },
+    },
+};
+
+const app = Vue.createApp(root);
+
+app.mount('#app');
+
+        </script>
+    <body>
+</html>
