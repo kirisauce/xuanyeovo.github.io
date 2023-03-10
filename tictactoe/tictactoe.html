@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>井字棋 | Tic Tac Toe</title>
+        <meta charset='utf-8' /><meta name='viewport' content='initial-scale=1,keighrhh'>
+        <script src='https://unpkg.com/vconsole@3.15.0/dist/vconsole.min.js'></script>
+        <script>let vColsole = new VConsole();</script>
+        <style>
+div#root {
+    display: grid;
+
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-rows: auto;
+    grid-row-gap: 20px;
+    grid-column-gap: 50px;
+    justify-items: center;
+    align-items: center;
+}
+
+#container {
+    display: grid;
+    aspect-ratio: 1.0;
+    width: min(90vw, 90vh);
+    overflow: hidden;
+    background: #aaaaaaaa;
+
+    border-style: solid;
+    border-width: 2px;
+    border-color: #b0dffc;
+    border-radius: 10px;
+    padding: 10px 10px 10px 10px;
+
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-gap: 5px;
+}
+
+div.block {
+    background: #88888811;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: auto;
+    height: auto;
+
+    border-radius: 15px;
+}
+
+div.block[chees='o'] {
+    content: '';
+    background: url('o.svg');
+    background-size: cover;
+}
+
+div.block[chees='x'] {
+    background: url('x.svg');
+    background-size: cover;
+}
+
+div#next {
+    width: 40%;
+    aspect-ratio: 1;
+    left: 50%;
+}
+
+input#reset {
+    height: 50px;
+    width: 40%;
+}
+
+input#reset:active {
+    outline: none;
+    resize: none;
+}
+        </style>
+    </head>
+    <body>
+        <div id='root'>
+            <div id='container'>
+            </div>
+            <input type='button' id='reset' value='重置' />
+            <div class='block' id='next' chees='none'></div>
+        </div>
+        <script>
+var current = true;
+var sensitive = false;
+function reset() {
+    current = true;
+    sensitive = true;
+    next.setAttribute('chees', 'x');
+    let elems = container.querySelectorAll('div.block');
+    for( let i = 0; i < elems.length; i++ ) {
+        elems[i].setAttribute('chees', 'none');
+    }
+}
+function get(x, y) {
+    return container.querySelector("div.block[x='" + String(x) + "'][y='" + String(y) + "']");
+}
+
+function check() {
+    let xrepeat = 0;
+    for( let x = 0; x < 3; x++ ) {
+        for( let y = 0; y < 3; y++ ) {
+            let val = get(x, y);
+            val.getAttribute('chees');
+        }
+    }
+}
+
+window.addEventListener('load', ()=>{
+    var container = document.querySelector('#container');
+    var next = document.querySelector('#next');
+    for( let i = 0; i < 9; i++ ) {
+        let elem = document.createElement('div');
+        elem.setAttribute('x', String(i % 3));
+        elem.setAttribute('y', String(Math.floor(i / 3)));
+        elem.setAttribute('class', 'block');
+        elem.setAttribute('chees', 'none');
+        elem.addEventListener('click', (e)=>{
+            if(sensitive) {
+                let ch = elem.getAttribute('chees');
+                if( ch == 'none' ) {
+                    elem.setAttribute('chees', current ? 'x' : 'o');
+                    current = !current;
+                    next.setAttribute('chees', current ? 'x' : 'o');
+                }
+            }
+        });
+        container.appendChild(elem);
+    }
+
+    reset();
+
+    document.querySelector('input#reset').addEventListener('click', e => reset());
+});
+        </script>
+    </body>
+</html>
