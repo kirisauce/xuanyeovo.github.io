@@ -1,0 +1,53 @@
+<html>
+    <head>
+        <title>NHII SCORE DETAIL</title>
+        <meta name='viewport' content='initial-scale=1.0,maximum-scale=3.0,minimun-scale=1.0'/>
+        <script src='vue.global.min.js'></script>
+        <!--script src='https://cdn.bootcdn.net/ajax/libs/vConsole/3.15.0/vconsole.min.js'></script-->
+        <style>
+#app {
+}
+        </style>
+    </head>
+    <body>
+        <div id='app'>
+            <input type='text' placeholder='在这里输入网站LINK' v-model='link'/>
+            <input type='text' placeholder='学号' v-model='studentid'/>
+            <input type='text' placeholder='考试ID' v-model='examid'/>
+            <input type='button' @click='apply()' value='进入'/>
+            <!--iframe :src='url'></iframe-->
+        </div>
+        <script>
+//var vConsole = new VConsole();
+'use strict';
+
+var app = Vue.createApp({
+    data() {
+        return {
+            link: window.localStorage.getItem('link'),
+            url: '',
+            studentid: '',
+            examid: ''
+        };
+    },
+
+    methods: {
+        apply() {
+            window.open(`${this.link}/base/newuistu_ctr/examscorepagedao?studentnum=${this.studentid}&examid=${this.examid}`);
+        }
+    },
+
+    watch: {
+        link: {
+            handler(newValue, oldValue) {
+                window.localStorage.setItem('link', newValue);
+            },
+            deep: true
+        }
+    }
+});
+app.mount('#app');
+
+        </script>
+    </body>
+</html>
