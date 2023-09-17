@@ -4,9 +4,11 @@
         <meta name='viewport' content='user-scalable=0,initial-scale=1.0,maximum-scale=1.0'/>
 
         <title>狗屁不通诗句生成器</title>
-        <!--script src='https://cdn.bootcdn.net/ajax/libs/vConsole/3.15.0/vconsole.min.js'></script-->
+        <!--script src='https://cdn.bootcdn.net/ajax/libs/vConsole/3.15.0/vconsole.min.js'></script>
         <script>
             //let vConsole = new VConsole();
+        </script-->
+        <script>
 
             var POEMCUTS = [];
 
@@ -48,6 +50,7 @@
                     let l = Number(length_e.value);
                     if( isNaN(l) || l <= 0 ) {
                         l = 5;
+                        length_e.value = '5';
                     }
 
                     let use_randchar = document.getElementById('use_random_char').checked;
@@ -71,6 +74,14 @@
                 document.getElementById('clear').addEventListener('click', ()=>{
                     document.getElementById('out').innerHTML = '';
                 });
+
+                document.getElementById('use_random_char').addEventListener('click', (e)=>{
+                    if (!e.currentTarget.checked) {
+                        document.getElementById('length').setAttribute('disabled', 'true');
+                    } else {
+                        document.getElementById('length').removeAttribute('disabled');
+                    }
+                });
             };
         </script>
         <style>
@@ -82,9 +93,9 @@
     <body>
         <h1 id='title'>狗屁不通诗句生成器</h1>
         <input type='button' id='confuse' value='生成' />
-        <input type='text' id='length' placeholder='单句字数(默认5)' /><br/>
+        <input type='text' id='length' placeholder='单句字数(默认5)' disabled /><br/>
         <input type='button' id='clear' value='清除' />
-        <input type='checkbox' id='use_random_char' checked disabled='true' /><a>使用随机字符</a><br/>
+        <input type='checkbox' id='use_random_char' disabled='true' /><a>使用随机字符(看不懂的)</a><br/>
         <p id='out'></p>
     </body>
 </html>
