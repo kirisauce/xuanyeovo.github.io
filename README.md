@@ -7,7 +7,9 @@
 
 # Opensource License
 
-- [Vue.js 3.2.47](MIT)
+本网站的所有代码以[MIT License](http://opensource.org/licenses/mit)发布
+文字内容以 [CC-BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) 协议发布
 
-[MIT]: http://opensource.org/licenses/mit
-[Apache-2.0]: http://opensource.org/licenses/apache-2.0
+## Third-party projects
+
+- [Vue.js 3.2.47](http://opensource.org/licenses/mit)
