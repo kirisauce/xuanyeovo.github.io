@@ -88,10 +88,11 @@ a {
             <div style='margin-bottom: 10px;'>
                 <input type='radio' value='detail' v-model='mode' name='mode' /><a @click='mode = "detail"'>学生详情</a>
                 <input type='radio' value='excel' v-model='mode' name='mode' /><a @click='mode = "excel"'>提取Excel表格</a>
+                <input type='radio' value='pwdquery' v-model='mode' name='mode' /><a @click='mode = "pwdquery"'>查询密码</a>
             </div>
 
-            <input type='text' placeholder='学号' v-model='studentid' class='txt normal_input' v-show='mode == "detail"' /><br/>
-            <input type='text' placeholder='考试ID' v-model='examid' class='txt normal_input' /><br/>
+            <input type='text' placeholder='学号' v-model='studentid' class='txt normal_input' v-show='mode != "excel"' /><br/>
+            <input type='text' placeholder='考试ID' v-model='examid' class='txt normal_input' v-show='mode != "pwdquery"' /><br/>
             <input type='button' @click='jump_trigger()' :value='jump_text' />
         </div>
         <script>
@@ -121,6 +122,8 @@ function getButtonTextByMode(mode) {
         return '跳转学生详情';
     } else if (mode == 'excel') {
         return '跳转提取Excel表格';
+    } else if (mode == 'pwdquery') {
+        return '跳转密码查询';
     }
 }
 
@@ -151,6 +154,8 @@ var app = Vue.createApp({
                 this.jump_detail();
             } else if (this.mode == 'excel') {
                 this.jump_excel();
+            } else if (this.mode == 'pwdquery') {
+                this.jump_pwdquery();
             }
         },
 
@@ -177,7 +182,16 @@ var app = Vue.createApp({
             }
 
             this.jump(`${this.link}/base/newuiteacher/examscorebillexcel2dao?examid=${examid}&classid=0&subjectid=0&subjectrank=1`);
-        }
+        },
+
+        jump_pwdquery() {
+            if (this.studentid == '') {
+                alert('Student ID must not be empty');
+                return;
+            }
+
+            this.jump(`${this.link}/base/newuiteacher/getstudentinfodao?stunum=${this.studentid}`);
+        },
     },
 
     watch: {
