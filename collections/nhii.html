@@ -1,49 +1,195 @@
 <html>
     <head>
         <title>NHII SCORE DETAIL</title>
-        <meta name='viewport' content='initial-scale=1.0,maximum-scale=3.0,minimun-scale=1.0'/>
+        <meta charset='utf-8' />
+        <meta name='viewport' content='initial-scale=1.0,maximum-scale=3.0,minimum-scale=1.0'/>
         <script src='../js/vue.global.min.js'></script>
         <!--script src='https://cdn.bootcdn.net/ajax/libs/vConsole/3.15.0/vconsole.min.js'></script-->
         <style>
 #app {
 }
+
+:root {
+    --bkgr: #fefefe;
+    --input-bkgr: #eeeeee;
+    --input-border-color: #b0b0b0;
+    --input-placeholder: #a8a8a8;
+    --font-color: #111111;
+}
+
+@media screen and (prefers-color-scheme: dark) {
+    :root {
+        --bkgr: #101010;
+        --input-bkgr: #898989;
+        --input-border-color: #606060;
+        --input-placeholder: #aaaaaa;
+        --font-color: #eeeeee;
+    }
+}
+
+body {
+    background-color: var(--bkgr);
+    transition: background-color 0.8s ease-out;
+}
+
+* {
+    transition: color 0.8s ease-out;
+}
+
+input.txt {
+    background-color: var(--input-bkgr);
+    border-color: var(--input-border-color);
+    outline: none;
+    color: var(--font-color);
+
+    transition: background-color 0.8s ease-out;
+    transition: border-color 0.8s ease-out;
+}
+
+input.txt::placeholder {
+    color: var(--input-placeholder);
+}
+
+.link_input {
+    width: 100%;
+    height: 40px;
+    font-size: 1.2em;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 7px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.normal_input {
+    height: 30px;
+    font-size: 0.8em;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+a {
+    color: var(--font-color);
+}
         </style>
     </head>
     <body>
         <div id='app'>
-            <input type='text' placeholder='在这里输入网站LINK' v-model='link'/>
-            <input type='text' placeholder='学号' v-model='studentid'/>
-            <input type='text' placeholder='考试ID' v-model='examid'/>
-            <input type='button' @click='apply()' value='进入'/>
-            <!--iframe :src='url'></iframe-->
+            <input type='text' placeholder='网站LINK(例如: http://example.com/)' v-model='link' class='txt link_input' /><br/>
+
+            <div style>
+                <input type='checkbox' ref='jump_newpage' @click='jump_newpage = this.checked' checked /><a @click='this.$refs.jump_newpage.click()'>是否打开新页面</a>
+            </div>
+
+            <!-- 模式选择 -->
+            <div style='margin-bottom: 10px;'>
+                <input type='radio' value='detail' v-model='mode' name='mode' /><a @click='mode = "detail"'>学生详情</a>
+                <input type='radio' value='excel' v-model='mode' name='mode' /><a @click='mode = "excel"'>提取Excel表格</a>
+            </div>
+
+            <input type='text' placeholder='学号' v-model='studentid' class='txt normal_input' v-show='mode == "detail"' /><br/>
+            <input type='text' placeholder='考试ID' v-model='examid' class='txt normal_input' /><br/>
+            <input type='button' @click='jump_trigger()' :value='jump_text' />
         </div>
         <script>
 //var vConsole = new VConsole();
 'use strict';
 
+function autosave(localKey) {
+    return {
+        handler(newValue, oldValue) {
+            window.localStorage.setItem(localKey, newValue);
+        },
+        deep: true
+    };
+}
+
+function getOrInit(key, defaultValue) {
+    let v = window.localStorage.getItem(key);
+    if (v === null) {
+        v = defaultValue;
+        window.localStorage.setItem(key, defaultValue);
+    }
+    return v;
+}
+
+function getButtonTextByMode(mode) {
+    if (mode == 'detail') {
+        return '跳转学生详情';
+    } else if (mode == 'excel') {
+        return '跳转提取Excel表格';
+    }
+}
+
 var app = Vue.createApp({
     data() {
         return {
-            link: window.localStorage.getItem('link'),
-            url: '',
+            link: getOrInit('link', ''),
+            mode: getOrInit('mode', 'detail'),
             studentid: '',
-            examid: ''
+            examid: getOrInit('examid', ''),
+            jump_text: getButtonTextByMode(getOrInit('mode', 'detail')),
+            jump_newpage: true,
         };
     },
 
     methods: {
-        apply() {
-            window.open(`${this.link}/base/newuistu_ctr/examscorepagedao?studentnum=${this.studentid}&examid=${this.examid}`);
+        jump(url) {
+            if (this.jump_newpage) {
+                window.open(url);
+            } else {
+                window.location.href = url;
+            }
+        },
+
+        jump_trigger() {
+
+            if (this.mode == 'detail') {
+                this.jump_detail();
+            } else if (this.mode == 'excel') {
+                this.jump_excel();
+            }
+        },
+
+        jump_detail() {
+            let examid = Number(this.examid);
+            if (isNaN(examid) || examid == 0) {
+                alert('Unrecogizable ExamID');
+                return;
+            }
+
+            if (this.studentid == '') {
+                alert('Student ID must not be empty');
+                return;
+            }
+
+            this.jump(`${this.link}/base/newuistu_ctr/examscorepagedao?studentnum=${this.studentid}&examid=${examid}`);
+        },
+
+        jump_excel() {
+            let examid = Number(this.examid);
+            if (isNaN(examid) || examid == 0) {
+                alert('Unrecogizable ExamID');
+                return;
+            }
+
+            this.jump(`${this.link}/base/newuiteacher/examscorebillexcel2dao?examid=${examid}&classid=0&subjectid=0&subjectrank=1`);
         }
     },
 
     watch: {
-        link: {
-            handler(newValue, oldValue) {
-                window.localStorage.setItem('link', newValue);
+        link: autosave('link'),
+        examid: autosave('examid'),
+        mode: {
+            handler(newValue) {
+                window.localStorage.setItem('mode', newValue);
+                this.jump_text = getButtonTextByMode(newValue);
             },
-            deep: true
-        }
+            deep: true,
+        },
     }
 });
 app.mount('#app');
